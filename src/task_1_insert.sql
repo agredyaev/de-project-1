@@ -12,11 +12,10 @@ WITH orders_filtered AS (
         date_part('year', order_ts) >= 2021
         AND status = 4
 ),
-past_since_last_order AS (
+last_order AS (
     SELECT
         user_id,
-        MIN(EXTRACT(epoch FROM NOW() - order_ts)::INT
-        ) past_since_last_order
+        MAX(order_ts) last_order
     FROM
         orders_filtered
     GROUP BY
@@ -44,7 +43,7 @@ SELECT
     id AS user_id,
     NTILE(5) OVER (
         ORDER BY
-            COALESCE(p.past_since_last_order, 9 * 10 ^ 6) DESC
+            COALESCE(p.last_order, '1970-01-01')
     ) recency,
     NTILE(5) OVER (
         ORDER BY
@@ -53,9 +52,9 @@ SELECT
     NTILE(5) OVER (
         ORDER BY
             COALESCE(t.total_spent, 0)
-    ) monetary_value
+    ) monetary_values
 FROM
     de.analysis.users u
-    LEFT JOIN past_since_last_order p ON p.user_id = u.id
+    LEFT JOIN last_order p ON p.user_id = u.id
     LEFT JOIN orders_quantity o ON o.user_id = u.id
     LEFT JOIN total_spent t ON t.user_id = u.id
