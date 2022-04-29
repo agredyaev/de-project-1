@@ -165,7 +165,7 @@ WITH orders_filtered AS (
         de.analysis.orders
     WHERE
         date_part('year', order_ts) >= 2021
-        AND status = 5
+        AND status = 4
 ),
 past_since_last_order AS (
     SELECT
